@@ -558,6 +558,14 @@ describe("ts-interface-checker", () => {
     assert.instanceOf(Greeter.getType(), t.TIface);
   });
 
+  it("should allow deleting extraneous properties", () => {
+    const {Shape} = createCheckers(shapes);
+    const square = {kind: "square", size: 17, depth: 5};
+    Shape.checkAndDeleteExtras(square);
+    assert.deepEqual(square as any, {kind: "square", size: 17});
+    assert.throws(() => Shape.checkAndDeleteExtras({}), /value.kind is missing$/);
+  });
+
   it("should allow getting error details", () => {
     const {Shape} = createCheckers(shapes);
     const {Type} = createCheckers({

@@ -1,4 +1,4 @@
-import {basicTypes, CheckerFunc, ITypeSuite, TFunc, TIface, TType} from "./types";
+import {basicTypes, CheckerFunc, Extras, ITypeSuite, TFunc, TIface, TType} from "./types";
 import {DetailContext, IErrorDetail, NoopContext} from "./util";
 
 /**
@@ -44,6 +44,7 @@ export class Checker {
   private props: Map<string, TType> = new Map();
   private checkerPlain: CheckerFunc;
   private checkerStrict: CheckerFunc;
+  private checkerDelete: CheckerFunc;
 
   // Create checkers by using `createCheckers()` function.
   constructor(private suite: ITypeSuite, private ttype: TType, private _path: string = 'value') {
@@ -52,8 +53,9 @@ export class Checker {
         this.props.set(p.name, p.ttype);
       }
     }
-    this.checkerPlain = this.ttype.getChecker(suite, false);
-    this.checkerStrict = this.ttype.getChecker(suite, true);
+    this.checkerPlain = this.ttype.getChecker(suite, Extras.ignore);
+    this.checkerStrict = this.ttype.getChecker(suite, Extras.error);
+    this.checkerDelete = this.ttype.getChecker(suite, Extras.delete);
   }
 
   /**
@@ -107,6 +109,12 @@ export class Checker {
   public strictValidate(value: any): IErrorDetail|null {
     return this._doValidate(this.checkerStrict, value);
   }
+
+  /**
+   * Check that the given value satisfies this checker's type, or throw Error.
+   * Extra members in objects and tuples will be deleted in place.
+   */
+  public checkAndDeleteExtras(value: any): void { return this._doCheck(this.checkerDelete, value); }
 
   /**
    * If this checker is for an interface, returns a Checker for the type required for the given
